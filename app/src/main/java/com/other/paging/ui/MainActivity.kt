@@ -8,9 +8,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.other.paging.Injection
 import com.example.android.codelabs.paging.R
 import com.other.paging.model.Repo
@@ -31,7 +30,6 @@ class MainActivity : AppCompatActivity() {
         // add dividers between RecyclerView's row items
         val decoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         list.addItemDecoration(decoration)
-        setupScrollListener()
 
         initAdapter()
         val query = savedInstanceState?.getString(LAST_SEARCH_QUERY) ?: DEFAULT_QUERY
@@ -47,9 +45,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun initAdapter() {
         list.adapter = _adapter
-        _viewModel.repos.observe(this, Observer<List<Repo>> {
-            Log.i("Activity", "list: ${it?.size}")
+        _viewModel.repos.observe(this, Observer<PagedList<Repo>> {
             showEmptyList(it?.size == 0)
+            Log.i("WTF", "submitting list w ${it?.size} items")
             _adapter.submitList(it)
         })
         _viewModel.networkErrors.observe(this, Observer<String> {
@@ -86,20 +84,6 @@ class MainActivity : AppCompatActivity() {
             emptyList.visibility = View.GONE
             list.visibility = View.VISIBLE
         }
-    }
-
-    private fun setupScrollListener() {
-        val layoutManager = list.layoutManager as LinearLayoutManager
-        list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val totalItemCount = layoutManager.itemCount
-                val visibleItemCount = layoutManager.childCount
-                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-
-                _viewModel.listScrolled(visibleItemCount, lastVisibleItem, totalItemCount)
-            }
-        })
     }
 
     companion object {
